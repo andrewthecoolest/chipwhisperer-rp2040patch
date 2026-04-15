@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.13)
 
+# Tell cmake to test the cross-compiler by compiling only (no link).
+# Without this, cmake tries to link a test binary and fails because
+# arm-none-eabi-gcc needs crt0.o / libc which aren't available outside
+# the pico-sdk linker script environment.
+set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
+
 # PICO_SDK_PATH must be set in the environment or passed via -DPICO_SDK_PATH=
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
