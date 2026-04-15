@@ -1,0 +1,50 @@
+# RP2040 HAL — delegates build to pico-sdk cmake
+#
+# Unlike other CW targets, the RP2040 build is driven by pico-sdk cmake
+# rather than arm-none-eabi-gcc directly. This is because the RP2040
+# requires a 256-byte boot2 QSPI configuration blob at the start of flash
+# that pico-sdk manages automatically.
+#
+# Required: set PICO_SDK_PATH before invoking make
+#   export PICO_SDK_PATH=/path/to/pico-sdk
+#
+# The standard CW SRC/CFLAGS/LDFLAGS variables are not used here.
+# rp2040_hal.c is compiled as part of the cmake project instead.
+
+# Default to the symlink next to this file; override by exporting PICO_SDK_PATH
+PICO_SDK_PATH ?= $(HALPATH)/rp2040/pico-sdk
+
+ifeq ($(wildcard $(PICO_SDK_PATH)/external/pico_sdk_import.cmake),)
+  $(error pico-sdk not found at $(PICO_SDK_PATH). Run: ln -s /path/to/pico-sdk $(HALPATH)/rp2040/pico-sdk)
+endif
+
+CDEFS  += -DRP2040
+FORMAT  = binary
+
+# cmake build artifacts go here
+RP2040_BUILD_DIR = $(OBJDIR)/rp2040_build
+
+# Path to the CMakeLists.txt (lives next to this file)
+RP2040_CMAKE_DIR = $(HALPATH)/rp2040
+
+.PHONY: RP2040_CMAKE_CONFIGURE RP2040_CMAKE_BUILD
+
+RP2040_CMAKE_CONFIGURE:
+	mkdir -p $(RP2040_BUILD_DIR)
+	cd $(RP2040_BUILD_DIR) && cmake \
+		-DPICO_SDK_PATH=$(PICO_SDK_PATH) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DRP2040_TARGET=$(TARGET) \
+		-DFIRMWAREPATH=$(FIRMWAREPATH) \
+		$(RP2040_CMAKE_DIR)
+
+RP2040_CMAKE_BUILD: RP2040_CMAKE_CONFIGURE
+	$(MAKE) -C $(RP2040_BUILD_DIR)
+	arm-none-eabi-objcopy -O binary \
+		$(RP2040_BUILD_DIR)/$(TARGET).elf \
+		$(TARGET).bin
+
+all: RP2040_CMAKE_BUILD
+
+clean:
+	rm -rf $(RP2040_BUILD_DIR)

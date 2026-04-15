@@ -57,6 +57,7 @@ void platform_init(void);
 #define CW308_MPC5676R 35
 #define CW308_NEORV32  36
 #define CW305_IBEX  37
+#define CW308_RP2040   38
 
 //HAL_TYPE Define Types
 #define HAL_avr      1
@@ -89,6 +90,7 @@ void platform_init(void);
 #define HAL_neorv32  28
 #define HAL_sam4s  29
 #define HAL_ibex  30
+#define HAL_rp2040  31
 
 #if HAL_TYPE == HAL_avr
     #include <avr/io.h>
@@ -162,6 +164,8 @@ void platform_init(void);
     #include "sam4s/sam4s_hal.h"
 #elif HAL_TYPE == HAL_ibex
     #include "ibex/ibex_hal.h"
+#elif HAL_TYPE == HAL_rp2040
+    #include "rp2040/rp2040_hal.h"
 #else
     #error "Unsupported HAL Type"
 #endif
