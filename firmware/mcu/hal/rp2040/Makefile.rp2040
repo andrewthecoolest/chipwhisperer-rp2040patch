@@ -30,19 +30,25 @@ RP2040_BUILD_DIR = rp2040_build-$(PLATFORM)
 RP2040_CMAKE_DIR = $(HALPATH)/rp2040
 
 # Collect CW app sources + this HAL into a cmake semicolon-separated list.
-# SRC is populated by the app Makefile before Makefile.hal includes this file.
 #
-# CW uses VPATH so bare filenames like "simpleserial.c" and "hal.c" in SRC
-# are found by make searching VPATH dirs, but $(abspath) doesn't know VPATH.
-# resolve_src tries the name as-is first, then searches each VPATH entry.
+# Use lazy '=' (not ':=') so these variables are expanded when the recipe
+# runs, not when this file is first included.  Makefile.rp2040 is pulled
+# in at Makefile.inc:39 (via Makefile.hal), but Makefile.crypto is not
+# included until Makefile.inc:43 — so with ':=' the crypto sources and
+# their include dirs are missing from the lists.  Lazy '=' sees the fully
+# populated SRC / EXTRAINCDIRS.
+#
+# CW also uses VPATH so bare filenames like "simpleserial.c" / "hal.c"
+# are found by make searching VPATH dirs; $(abspath) ignores VPATH.
+# resolve_src tries the path as-is first, then walks each VPATH entry.
 empty :=
 space := $(empty) $(empty)
 resolve_src = $(abspath $(firstword $(wildcard $(1) $(foreach v,$(subst :, ,$(VPATH)),$(v)/$(notdir $(1))))))
-_RP2040_SRCS       := $(foreach s,$(SRC),$(call resolve_src,$(s))) $(abspath $(HALPATH)/rp2040/rp2040_hal.c)
-_RP2040_SRCS_CMAKE := $(subst $(space),;,$(_RP2040_SRCS))
+_RP2040_SRCS       = $(foreach s,$(SRC),$(call resolve_src,$(s))) $(abspath $(HALPATH)/rp2040/rp2040_hal.c)
+_RP2040_SRCS_CMAKE = $(subst $(space),;,$(_RP2040_SRCS))
 
-_RP2040_INCS       := $(foreach d,$(EXTRAINCDIRS),$(abspath $(d)))
-_RP2040_INCS_CMAKE := $(subst $(space),;,$(_RP2040_INCS))
+_RP2040_INCS       = $(foreach d,$(EXTRAINCDIRS),$(abspath $(d)))
+_RP2040_INCS_CMAKE = $(subst $(space),;,$(_RP2040_INCS))
 
 .PHONY: RP2040_CMAKE_CONFIGURE RP2040_CMAKE_BUILD
 
@@ -55,7 +61,7 @@ RP2040_CMAKE_CONFIGURE:
 		-DFIRMWAREPATH=$(abspath $(FIRMWAREPATH)) \
 		"-DRP2040_APP_SRCS=$(_RP2040_SRCS_CMAKE)" \
 		"-DRP2040_EXTRA_INCDIRS=$(_RP2040_INCS_CMAKE)" \
-		"-DCMAKE_C_FLAGS=$(CDEFS)" \
+		"-DCMAKE_C_FLAGS=$(CDEFS) -mcpu=cortex-m0plus -mthumb" \
 		$(abspath $(RP2040_CMAKE_DIR))
 
 RP2040_CMAKE_BUILD: RP2040_CMAKE_CONFIGURE
