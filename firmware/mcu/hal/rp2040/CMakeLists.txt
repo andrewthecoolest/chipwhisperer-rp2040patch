@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.13)
 # PICO_SDK_PATH must be set in the environment or passed via -DPICO_SDK_PATH=
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
-# RP2040_TARGET is passed from Makefile.rp2040 (e.g. simpleserial-aes-CW308_RP2040)
+# RP2040_TARGET is passed from Makefile.rp2040 (e.g. simpleserial-aes)
 # FIRMWAREPATH is the root of the CW firmware directory
 if(NOT DEFINED RP2040_TARGET)
     message(FATAL_ERROR "RP2040_TARGET not set. Pass -DRP2040_TARGET=<target_name>")
@@ -16,18 +16,13 @@ project(${RP2040_TARGET} C CXX ASM)
 
 pico_sdk_init()
 
-# Collect app sources — the app Makefile passes its source files via
-# RP2040_APP_SRCS, or we fall back to globbing the firmware mcu directory.
-# TODO: wire up the actual app source list from the CW build system.
-# For now, list sources explicitly when invoking cmake:
-#   cmake ... -DRP2040_APP_SRCS="path/to/foo.c;path/to/bar.c"
-if(NOT DEFINED RP2040_APP_SRCS)
-    message(WARNING "RP2040_APP_SRCS not set — no app sources will be compiled")
-    set(RP2040_APP_SRCS "")
+# RP2040_APP_SRCS: semicolon-separated list of absolute source paths.
+# Populated by Makefile.rp2040 from the CW SRC variable + rp2040_hal.c.
+if(NOT DEFINED RP2040_APP_SRCS OR RP2040_APP_SRCS STREQUAL "")
+    message(FATAL_ERROR "RP2040_APP_SRCS not set — pass all app sources via -DRP2040_APP_SRCS='a.c;b.c'")
 endif()
 
 add_executable(${RP2040_TARGET}
-    ${CMAKE_CURRENT_LIST_DIR}/rp2040_hal.c
     ${RP2040_APP_SRCS}
 )
 
@@ -37,9 +32,13 @@ target_include_directories(${RP2040_TARGET} PRIVATE
     ${FIRMWAREPATH}/mcu/simpleserial
 )
 
-# pico-sdk libraries: hardware_uart and hardware_gpio are not needed since
-# rp2040_hal.c uses direct register access. pico_stdlib pulls in boot2,
-# the startup, and the linker script.
+# Extra include dirs forwarded from CW's EXTRAINCDIRS
+if(DEFINED RP2040_EXTRA_INCDIRS AND NOT RP2040_EXTRA_INCDIRS STREQUAL "")
+    target_include_directories(${RP2040_TARGET} PRIVATE ${RP2040_EXTRA_INCDIRS})
+endif()
+
+# pico_stdlib pulls in boot2, the startup crt0.S, and the linker script.
+# hardware_uart / hardware_gpio not needed — rp2040_hal.c uses direct register access.
 target_link_libraries(${RP2040_TARGET}
     pico_stdlib
 )

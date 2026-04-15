@@ -9,7 +9,7 @@
 #   export PICO_SDK_PATH=/path/to/pico-sdk
 #
 # The standard CW SRC/CFLAGS/LDFLAGS variables are not used here.
-# rp2040_hal.c is compiled as part of the cmake project instead.
+# All sources (app + HAL) are compiled as part of the cmake project instead.
 
 # Default to the symlink next to this file; override by exporting PICO_SDK_PATH
 PICO_SDK_PATH ?= $(HALPATH)/rp2040/pico-sdk
@@ -27,22 +27,39 @@ RP2040_BUILD_DIR = $(OBJDIR)/rp2040_build
 # Path to the CMakeLists.txt (lives next to this file)
 RP2040_CMAKE_DIR = $(HALPATH)/rp2040
 
+# Collect CW app sources + this HAL into a cmake semicolon-separated list.
+# SRC is populated by the app Makefile before Makefile.hal includes this file.
+empty :=
+space := $(empty) $(empty)
+_RP2040_SRCS       := $(foreach s,$(SRC) $(HALPATH)/rp2040/rp2040_hal.c,$(abspath $(s)))
+_RP2040_SRCS_CMAKE := $(subst $(space),;,$(_RP2040_SRCS))
+
+_RP2040_INCS       := $(foreach d,$(EXTRAINCDIRS),$(abspath $(d)))
+_RP2040_INCS_CMAKE := $(subst $(space),;,$(_RP2040_INCS))
+
 .PHONY: RP2040_CMAKE_CONFIGURE RP2040_CMAKE_BUILD
 
 RP2040_CMAKE_CONFIGURE:
-	mkdir -p $(RP2040_BUILD_DIR)
-	cd $(RP2040_BUILD_DIR) && cmake \
+	mkdir -p $(abspath $(RP2040_BUILD_DIR))
+	cd $(abspath $(RP2040_BUILD_DIR)) && cmake \
 		-DPICO_SDK_PATH=$(abspath $(PICO_SDK_PATH)) \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DRP2040_TARGET=$(TARGET) \
 		-DFIRMWAREPATH=$(abspath $(FIRMWAREPATH)) \
+		"-DRP2040_APP_SRCS=$(_RP2040_SRCS_CMAKE)" \
+		"-DRP2040_EXTRA_INCDIRS=$(_RP2040_INCS_CMAKE)" \
+		"-DCMAKE_C_FLAGS=$(CDEFS)" \
 		$(abspath $(RP2040_CMAKE_DIR))
 
 RP2040_CMAKE_BUILD: RP2040_CMAKE_CONFIGURE
-	$(MAKE) -C $(RP2040_BUILD_DIR)
-	arm-none-eabi-objcopy -O binary \
-		$(RP2040_BUILD_DIR)/$(TARGET).elf \
-		$(TARGET).bin
+	$(MAKE) -C $(abspath $(RP2040_BUILD_DIR))
+	cp $(abspath $(RP2040_BUILD_DIR))/$(TARGET).bin ./$(TARGET).bin
+
+# Prevent the regular CW link from running — cmake produces the final ELF.
+# Without this override the CW make tries to link the .o files it compiled
+# and fails because it doesn't have boot2 or the pico-sdk startup.
+$(OBJDIR)/$(TARGET).elf: RP2040_CMAKE_BUILD
+	@true
 
 all: RP2040_CMAKE_BUILD
 
