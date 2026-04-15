@@ -21,8 +21,10 @@ endif
 CDEFS  += -DRP2040
 FORMAT  = binary
 
-# cmake build artifacts go here
-RP2040_BUILD_DIR = $(OBJDIR)/rp2040_build
+# cmake build artifacts go here — kept OUTSIDE $(OBJDIR) so that
+# Makefile.inc's clean_all_mute (rm -rf $(OBJDIR)) never deletes it.
+# This gives true incremental pico-sdk builds across make invocations.
+RP2040_BUILD_DIR = rp2040_build-$(PLATFORM)
 
 # Path to the CMakeLists.txt (lives next to this file)
 RP2040_CMAKE_DIR = $(HALPATH)/rp2040
