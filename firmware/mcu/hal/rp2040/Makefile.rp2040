@@ -21,7 +21,9 @@ endif
 CDEFS   += -DRP2040
 FORMAT   = binary
 OBJCOPY  = arm-none-eabi-objcopy
+OBJDUMP  = arm-none-eabi-objdump
 SIZE     = arm-none-eabi-size
+NM       = arm-none-eabi-nm
 
 # cmake build artifacts go here — kept OUTSIDE $(OBJDIR) so that
 # Makefile.inc's clean_all_mute (rm -rf $(OBJDIR)) never deletes it.
