@@ -63,9 +63,9 @@ RP2040_CMAKE_BUILD: RP2040_CMAKE_CONFIGURE
 		./$(TARGET).bin
 
 # Prevent the regular CW link from running — cmake produces the final ELF.
-# Without this override the CW make tries to link the .o files it compiled
-# and fails because it doesn't have boot2 or the pico-sdk startup.
-$(OBJDIR)/$(TARGET).elf: RP2040_CMAKE_BUILD
+# CW Makefile.inc builds $(TARGET).elf in the app dir (not in $(OBJDIR)).
+# Override it here so make waits for cmake and then does nothing.
+$(TARGET).elf: RP2040_CMAKE_BUILD
 	@true
 
 all: RP2040_CMAKE_BUILD
