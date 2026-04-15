@@ -18,8 +18,10 @@ ifeq ($(wildcard $(PICO_SDK_PATH)/external/pico_sdk_import.cmake),)
   $(error pico-sdk not found at $(PICO_SDK_PATH). Run: ln -s /path/to/pico-sdk $(HALPATH)/rp2040/pico-sdk)
 endif
 
-CDEFS  += -DRP2040
-FORMAT  = binary
+CDEFS   += -DRP2040
+FORMAT   = binary
+OBJCOPY  = arm-none-eabi-objcopy
+SIZE     = arm-none-eabi-size
 
 # cmake build artifacts go here — kept OUTSIDE $(OBJDIR) so that
 # Makefile.inc's clean_all_mute (rm -rf $(OBJDIR)) never deletes it.
@@ -69,6 +71,8 @@ RP2040_CMAKE_BUILD: RP2040_CMAKE_CONFIGURE
 	arm-none-eabi-objcopy -O binary \
 		$(abspath $(RP2040_BUILD_DIR))/$(TARGET)_fw.elf \
 		./$(TARGET)-$(PLATFORM).bin
+	cp $(abspath $(RP2040_BUILD_DIR))/$(TARGET)_fw.elf \
+		./$(TARGET)-$(PLATFORM).elf
 
 # Prevent the regular CW link from running — cmake produces the final ELF.
 # Makefile.inc defines: TARGET-PLAT = $(TARGET)-$(PLATFORM)
