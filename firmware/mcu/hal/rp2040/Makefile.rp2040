@@ -58,7 +58,9 @@ RP2040_CMAKE_CONFIGURE:
 
 RP2040_CMAKE_BUILD: RP2040_CMAKE_CONFIGURE
 	$(MAKE) -C $(abspath $(RP2040_BUILD_DIR))
-	cp $(abspath $(RP2040_BUILD_DIR))/$(TARGET).bin ./$(TARGET).bin
+	arm-none-eabi-objcopy -O binary \
+		$(abspath $(RP2040_BUILD_DIR))/$(TARGET).elf \
+		./$(TARGET).bin
 
 # Prevent the regular CW link from running — cmake produces the final ELF.
 # Without this override the CW make tries to link the .o files it compiled

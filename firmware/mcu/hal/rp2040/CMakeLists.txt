@@ -49,9 +49,6 @@ target_link_libraries(${RP2040_TARGET}
     pico_stdlib
 )
 
-# Produce .bin and .uf2 alongside the .elf
-pico_add_extra_outputs(${RP2040_TARGET})
-
 # Disable USB and UART stdio (SimpleSerial owns the UART)
 pico_enable_stdio_usb(${RP2040_TARGET} 0)
 pico_enable_stdio_uart(${RP2040_TARGET} 0)
