@@ -28,27 +28,36 @@ if(NOT DEFINED RP2040_APP_SRCS OR RP2040_APP_SRCS STREQUAL "")
     message(FATAL_ERROR "RP2040_APP_SRCS not set — pass all app sources via -DRP2040_APP_SRCS='a.c;b.c'")
 endif()
 
-add_executable(${RP2040_TARGET}
+# Use a distinct cmake target name to avoid a cmake 3.26+ circular
+# OUTPUT_DIRECTORY error: the app dir is named the same as RP2040_TARGET
+# (e.g. simpleserial-aes), so the cmake target would share a name with a
+# directory component of the binary dir, triggering the false positive.
+set(_EXE ${RP2040_TARGET}_fw)
+
+add_executable(${_EXE}
     ${RP2040_APP_SRCS}
 )
 
-target_include_directories(${RP2040_TARGET} PRIVATE
+target_include_directories(${_EXE} PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${FIRMWAREPATH}/mcu
-    ${FIRMWAREPATH}/mcu/simpleserial
+    ${FIRMWAREPATH}
+    ${FIRMWAREPATH}/simpleserial
 )
 
 # Extra include dirs forwarded from CW's EXTRAINCDIRS
 if(DEFINED RP2040_EXTRA_INCDIRS AND NOT RP2040_EXTRA_INCDIRS STREQUAL "")
-    target_include_directories(${RP2040_TARGET} PRIVATE ${RP2040_EXTRA_INCDIRS})
+    target_include_directories(${_EXE} PRIVATE ${RP2040_EXTRA_INCDIRS})
 endif()
 
 # pico_stdlib pulls in boot2, the startup crt0.S, and the linker script.
 # hardware_uart / hardware_gpio not needed — rp2040_hal.c uses direct register access.
-target_link_libraries(${RP2040_TARGET}
+target_link_libraries(${_EXE}
     pico_stdlib
 )
 
 # Disable USB and UART stdio (SimpleSerial owns the UART)
-pico_enable_stdio_usb(${RP2040_TARGET} 0)
-pico_enable_stdio_uart(${RP2040_TARGET} 0)
+pico_enable_stdio_usb(${_EXE} 0)
+pico_enable_stdio_uart(${_EXE} 0)
+
+# Expose the ELF name so Makefile.rp2040 can find it
+message(STATUS "RP2040 cmake target ELF: ${_EXE}.elf")
