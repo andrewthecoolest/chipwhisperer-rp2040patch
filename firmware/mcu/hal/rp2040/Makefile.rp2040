@@ -29,9 +29,14 @@ RP2040_CMAKE_DIR = $(HALPATH)/rp2040
 
 # Collect CW app sources + this HAL into a cmake semicolon-separated list.
 # SRC is populated by the app Makefile before Makefile.hal includes this file.
+#
+# CW uses VPATH so bare filenames like "simpleserial.c" and "hal.c" in SRC
+# are found by make searching VPATH dirs, but $(abspath) doesn't know VPATH.
+# resolve_src tries the name as-is first, then searches each VPATH entry.
 empty :=
 space := $(empty) $(empty)
-_RP2040_SRCS       := $(foreach s,$(SRC) $(HALPATH)/rp2040/rp2040_hal.c,$(abspath $(s)))
+resolve_src = $(abspath $(firstword $(wildcard $(1) $(foreach v,$(subst :, ,$(VPATH)),$(v)/$(notdir $(1))))))
+_RP2040_SRCS       := $(foreach s,$(SRC),$(call resolve_src,$(s))) $(abspath $(HALPATH)/rp2040/rp2040_hal.c)
 _RP2040_SRCS_CMAKE := $(subst $(space),;,$(_RP2040_SRCS))
 
 _RP2040_INCS       := $(foreach d,$(EXTRAINCDIRS),$(abspath $(d)))
