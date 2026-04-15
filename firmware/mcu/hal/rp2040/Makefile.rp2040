@@ -63,9 +63,11 @@ RP2040_CMAKE_BUILD: RP2040_CMAKE_CONFIGURE
 		./$(TARGET).bin
 
 # Prevent the regular CW link from running — cmake produces the final ELF.
-# CW Makefile.inc builds $(TARGET).elf in the app dir (not in $(OBJDIR)).
-# Override it here so make waits for cmake and then does nothing.
-$(TARGET).elf: RP2040_CMAKE_BUILD
+# Makefile.inc defines: TARGET-PLAT = $(TARGET)-$(PLATFORM)
+# and the link rule builds $(TARGET-PLAT).elf via a pattern rule (%.elf).
+# An explicit rule always beats a pattern rule in GNU make, so define one
+# here using $(TARGET)-$(PLATFORM) which evaluates to the same name.
+$(TARGET)-$(PLATFORM).elf: RP2040_CMAKE_BUILD
 	@true
 
 all: RP2040_CMAKE_BUILD
