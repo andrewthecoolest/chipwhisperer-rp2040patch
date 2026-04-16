@@ -1,8 +1,8 @@
 #include "rp2040_hal.h"
 #include <stdint.h>
 
-// Trigger: RP2040 GPIO 4 -> CW TIO4 (pin 16)
-#define TRIGGER_PIN     4
+// Trigger: RP2040 GPIO 27 -> CW TIO4 (pin 16)
+#define TRIGGER_PIN     27
 
 // UART0: GPIO 0 (TX) / GPIO 1 (RX)
 //   GPIO 0 = UART0_TX (func 2) -> CW TIO2 (pin 12, CW reads)
@@ -87,41 +87,14 @@ static void unreset_wait(uint32_t mask)
     while ((RESETS_RESET_DONE & mask) != mask);
 }
 
-// Debug LED helpers — GPIO 10/11/12 drive MOSFETs with LEDs
-// LED10 = reached past IO unreset
-// LED11 = XOSC stable (or timed out)
-// LED12 = clock switch done, platform_init complete
-#define LED10 (1u << 10)
-#define LED11 (1u << 11)
-#define LED12 (1u << 12)
-
-static void debug_leds_init(void)
-{
-    GPIO_CTRL(10) = GPIO_FUNC_SIO;
-    GPIO_CTRL(11) = GPIO_FUNC_SIO;
-    GPIO_CTRL(12) = GPIO_FUNC_SIO;
-    SIO_GPIO_OUT_CLR = LED10 | LED11 | LED12;
-    SIO_GPIO_OE_SET  = LED10 | LED11 | LED12;
-}
-
 void platform_init(void)
 {
     // Unreset IO_BANK0 and PADS_BANK0 for GPIO function select
     unreset_wait(RESET_IO_BANK0 | RESET_PADS_BANK0);
 
-    // Stage 1: IO unreset done
-    debug_leds_init();
-    SIO_GPIO_OUT_SET = LED10;
-
     // Enable XOSC — CW HS2 drives XIN directly, XOUT floating.
-    // Fall through on timeout so UART still works for debugging.
     XOSC_CTRL = XOSC_CTRL_FREQ_RANGE | XOSC_CTRL_ENABLE;
-    for (uint32_t i = 0; i < 1000000; i++) {
-        if (XOSC_STATUS & XOSC_STATUS_STABLE) break;
-    }
-
-    // Stage 2: XOSC done (stable or timed out)
-    SIO_GPIO_OUT_SET = LED11;
+    while (!(XOSC_STATUS & XOSC_STATUS_STABLE));
 
     // Switch clk_ref to XOSC (src = 2), wait for glitchless mux
     CLK_REF_CTRL = 2u;
@@ -136,9 +109,6 @@ void platform_init(void)
 
     // Enable clk_peri from clk_sys (auxsrc = 0 = clk_sys = XOSC)
     CLK_PERI_CTRL = CLK_PERI_CTRL_ENABLE;
-
-    // Stage 3: platform_init complete
-    SIO_GPIO_OUT_SET = LED12;
 }
 
 void init_uart(void)

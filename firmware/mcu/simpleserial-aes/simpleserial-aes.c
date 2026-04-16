@@ -142,12 +142,13 @@ int main(void)
 	aes_indep_init();
 	aes_indep_key(tmp);
 
-    putch('h');
-    putch('e');
-    putch('l');
-    putch('l');
-    putch('o');
-    putch('\n');
+    /* Uncomment this to get a HELLO message for debug */
+    // putch('h');
+    // putch('e');
+    // putch('l');
+    // putch('l');
+    // putch('o');
+    // putch('\n');
 
 	simpleserial_init();
     #if SS_VER == SS_VER_2_1
