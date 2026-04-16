@@ -75,6 +75,8 @@ RP2040_CMAKE_BUILD: RP2040_CMAKE_CONFIGURE
 		./$(TARGET)-$(PLATFORM).bin
 	cp $(abspath $(RP2040_BUILD_DIR))/$(TARGET)_fw.elf \
 		./$(TARGET)-$(PLATFORM).elf
+	cp $(abspath $(RP2040_BUILD_DIR))/$(TARGET)_fw.uf2 \
+		./$(TARGET)-$(PLATFORM).uf2
 
 # Prevent the regular CW link from running — cmake produces the final ELF.
 # Makefile.inc defines: TARGET-PLAT = $(TARGET)-$(PLATFORM)

@@ -167,3 +167,7 @@ void putch(char c)
     while (UART_FR & UART_FR_TXFF);
     UART_DR = (uint32_t)(uint8_t)c;
 }
+
+// RP2040 has no LEDs on CW308T — stubs satisfy the HAL contract
+void led_error(unsigned int status) { (void)status; }
+void led_ok(unsigned int status)    { (void)status; }

@@ -59,5 +59,8 @@ target_link_libraries(${_EXE}
 pico_enable_stdio_usb(${_EXE} 0)
 pico_enable_stdio_uart(${_EXE} 0)
 
-# Expose the ELF name so Makefile.rp2040 can find it
+# Generate .uf2 for USB bootloader flashing (BOOTSEL mode).
+# elf2uf2 is built from pico-sdk source — no picotool download required.
+pico_add_extra_outputs(${_EXE})
+
 message(STATUS "RP2040 cmake target ELF: ${_EXE}.elf")
