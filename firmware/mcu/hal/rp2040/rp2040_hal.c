@@ -92,9 +92,12 @@ void platform_init(void)
     // Unreset IO_BANK0 and PADS_BANK0 for GPIO function select
     unreset_wait(RESET_IO_BANK0 | RESET_PADS_BANK0);
 
-    // Enable XOSC — CW HS2 drives XIN directly, XOUT floating
+    // Enable XOSC — CW HS2 drives XIN directly, XOUT floating.
+    // Fall through on timeout so UART still works for debugging.
     XOSC_CTRL = XOSC_CTRL_FREQ_RANGE | XOSC_CTRL_ENABLE;
-    while (!(XOSC_STATUS & XOSC_STATUS_STABLE));
+    for (uint32_t i = 0; i < 1000000; i++) {
+        if (XOSC_STATUS & XOSC_STATUS_STABLE) break;
+    }
 
     // Switch clk_ref to XOSC (src = 2), wait for glitchless mux
     CLK_REF_CTRL = 2u;
@@ -118,15 +121,16 @@ void init_uart(void)
     // Disable UART before configuring
     UART_CR = 0;
 
-    // Baud divisor = UARTCLK / (16 * baud). At 7.37 MHz:
-    //   38400  baud -> IBRD=12, FBRD=0
-    //   230400 baud -> IBRD=2,  FBRD=0
-#if SS_VER == SS_VER_2_0
-    UART_IBRD = 2;
+    // Baud divisor = UARTCLK / (16 * baud). At 12 MHz:
+    //   38400  baud -> IBRD=19, FBRD=34  (SS v1)   exact
+    //   230400 baud -> IBRD=3,  FBRD=16  (SS v2.x) exact
+#if SS_VER == SS_VER_2_0 || SS_VER == SS_VER_2_1
+    UART_IBRD = 3;
+    UART_FBRD = 16;
 #else
-    UART_IBRD = 12;
+    UART_IBRD = 19;
+    UART_FBRD = 34;
 #endif
-    UART_FBRD = 0;
 
     // 8N1, FIFOs enabled
     UART_LCR_H = UART_LCR_H_WLEN_8 | UART_LCR_H_FEN;
