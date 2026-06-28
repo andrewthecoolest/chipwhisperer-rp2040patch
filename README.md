@@ -1,6 +1,6 @@
 # ChipWhisperer RP2040 Target
 
-An extension to the ChipWhisperer platform that adds the **Raspberry Pi RP2040** as a target: a bare-metal HAL, OpenOCD config for flashing, and example capture notebooks. Includes a side-by-side comparison against the ATXmega128A4U.
+An extension to the ChipWhisperer platform that adds the **Raspberry Pi RP2040** as a target: a bare-metal HAL, OpenOCD config for flashing, and example capture notebook. Includes a side-by-side comparison against the ATXmega128A4U.
 
 ## What's here
 
