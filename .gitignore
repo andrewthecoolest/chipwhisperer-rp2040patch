@@ -4,6 +4,7 @@
 *.s#*
 *.b#?
 *.ipynb_checkpoints*
+**/.ipynb_checkpoints/*
 software/capture/capture-*
 */.autopilot*
 *.autopilot*
