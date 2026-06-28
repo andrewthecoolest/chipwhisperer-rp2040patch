@@ -82,3 +82,12 @@ software/chipwhisperer/logs/*
 !**/ChipWhisperer-CW305.bin
 !**/ChipWhisperer-Husky.bin
 *Zone.Identifier
+
+# RP2040 / Pico build output and bundled SDK/tools (CMake build trees,
+# pico-sdk, picotool, pioasm, .uf2 images, etc.)
+firmware/mcu/**/rp2040_build*/
+firmware/mcu/hal/rp2040/pico-sdk
+*.uf2
+
+# Other build artifact directories
+firmware/mcu/**/objdir*/
