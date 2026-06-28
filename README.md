@@ -72,7 +72,7 @@ ChipWhisperer's HS2 clocks the chip directly (12 MHz for RP2040), and the intern
 ## Hardware
 
 - **Raspberry Pi RP2040** on a **CW308 UFO** target board
-- A **ChipWhisperer** (Husky/Pro/Lite/Nano) — used as the SWD programmer, clock source, and trace capture
+- A **ChipWhisperer**
 
 ## References
 
